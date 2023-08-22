@@ -15,12 +15,16 @@ const Header = () => {
     // выводим в теле при наличии юзера приветствие к юзеру
     return (
         <div>
-            <Link to='/'>Home</Link>
-            <span> / </span>
+            <Link to='/' >Home</Link>
+            <span> | </span>
             {user ? (
                 <p onClick={logoutUser}>Logout</p>
             ) : (
-                <Link to='/login'>Login</Link>
+                <div>
+                    <Link to='/login'>Login</Link>
+                    <span> or </span>
+                    <Link to='/registration'>Registration</Link>
+                </div>
             )}
 
             {user && <p>Hello {user.username}</p>}

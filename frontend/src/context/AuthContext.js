@@ -26,14 +26,14 @@ export const AuthProvider = ({ children }) => {
     let [user, setUser] = useState(() =>
         localStorage.getItem('authToken') ? jwt_decode(localStorage.getItem('authToken')) : null)
     // задаем переменную, которая проверяет первую загрузку страницы (маунт?), и функцию для ее задания 
-    // нужна для того, чтобы при первой загрузке проверять, что токен точно создается
-    let [loading, setLoading] = useState(true)
+    // нужна для того, чтобы при первой загрузке проверять, что токен точно создается (??)
+    let [loading, setLoading] = useState(false)
 
     // асинхронная функция логина, которая принимает в себя event
     let loginUser = async (e) => {
         // запрещаем дефолтное использование, иначе она будет срабатывать дважды каждый раз при вызове
         e.preventDefault()
-        // отправляем POST запрос на получение токена по юзернейму и пассворду 
+        // отправляем POST запрос на создание токена по юзернейму и пассворду 
         // просим дождаться Promise через использование await
         let response = await fetch('http://127.0.0.1:8000/api/auth/jwt/create/', {
             method: 'POST',
@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }) => {
         // задаем {authToken} через {setAuthToken} как ответ от апи (два ключа - access и refresh)
         // задаем {user} через {setUser} как декодированные данные нашего access токен (будут присутстовать ключи id, username)
         // записываем в локальное хранилище (в бразуер) данные о токене
-        //перенаправляем пользователя с помощью {navigate} на главную страницу
+        // перенаправляем пользователя с помощью {navigate} на главную страницу
         if (response.status === 200) {
             setAuthToken(data)
             setUser(jwt_decode(data.access))
@@ -76,6 +76,36 @@ export const AuthProvider = ({ children }) => {
         setUser(null)
         localStorage.removeItem('AuthToken')
         navigate('/login')
+    }
+
+    // асинхронная функция регистрация пользователя, которая принимает в себя event
+    let registerUser = async (e) => {
+        // запрещаем дефолтное использование, иначе она будет срабатывать дважды каждый раз при вызове
+        e.preventDefault()
+        // отправляем POST запрос на создание пользователя по юзернейму и пассворду 
+        // просим дождаться Promise через использование await
+        let response = await fetch('http://127.0.0.1:8000/api/auth/users/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            // ковертируем JavaScript object в формат JSON
+            // юзернейма берем из event'а submit в форме в {RegisterPage} компонента
+            // забираем значение (value) поля username
+            // аналогично для пароля
+            body: JSON.stringify({ 'username': e.target.username.value, 'password': e.target.password.value })
+        })
+        // проверяем, что ответ от сервера окей (запрос прошел успешно, статус == 200)
+        // если так, то вызываем функцию {loginUser}, куда передаем event из формы в {RegisterPage}
+        // которая запросит по нашим данным (username, password) токен и запишет его в память
+        // а так же перенаправит его на главную страницу
+        if (response.status === 201) {
+            loginUser(e)
+
+        } else {
+            //иначе оповещаем пользователя об ошибке инпута (скорее всего такой пользователь уже есть)
+            alert('something wrong with your input response')
+        }
     }
 
     // асинхронная фукнция обновления access токена через refresh токен
@@ -110,9 +140,9 @@ export const AuthProvider = ({ children }) => {
         }
 
         // проверяем, первая ли загрузка страницы
-        // если да, то изменяем {loading} на false
+        // если да, то изменяем {loading} на true
         if (loading) {
-            setLoading(false)
+            setLoading(true)
         }
     }
 
@@ -122,7 +152,8 @@ export const AuthProvider = ({ children }) => {
         user: user,
         authToken: authToken,
         loginUser: loginUser,
-        logoutUser: logoutUser
+        logoutUser: logoutUser,
+        registerUser: registerUser
 
     }
 
@@ -150,7 +181,7 @@ export const AuthProvider = ({ children }) => {
         // не забываем про зависимости!
     }, [authToken, loading])
 
-    // 
+
     return (
         // просим предоставлять всем "детям" нашего компонента контекст {contextData}
         // заодно проверяем, если токен еще не получен (в таком случае {loading} == false), то 
