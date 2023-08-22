@@ -1,6 +1,6 @@
 # Registration_page
 
-Registration_page is a simple project that contains 
+Registration_page is a simple project that contains only login/logout page (for now) with jwt token.
 
 ## Installation
 
